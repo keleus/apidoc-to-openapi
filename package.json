@@ -1,0 +1,37 @@
+{
+  "name": "apidoc-to-openapi",
+  "version": "0.1.1",
+  "description": "CLI to convert apidoc comments into OpenAPI JSON/YAML.",
+  "private": false,
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "apidoc-to-openapi": "./bin/apidoc-to-openapi.js"
+  },
+  "keywords": [
+    "apidoc",
+    "openapi",
+    "swagger",
+    "cli",
+    "api-documentation"
+  ],
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "check": "node --check src/cli.js && node --check src/converter.js && node --check src/options.js",
+    "prepublishOnly": "npm run check"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "apidoc": "^1.2.0",
+    "yaml": "^2.5.1"
+  }
+}

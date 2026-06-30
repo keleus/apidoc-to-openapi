@@ -16,13 +16,28 @@ const BODYLESS_METHODS = new Set(["get", "head", "delete", "options", "trace"]);
 const TYPE_MAP = {
   string: { type: "string" },
   number: { type: "number" },
-  integer: { type: "integer" },
-  int: { type: "integer" },
-  long: { type: "integer" },
-  float: { type: "number" },
-  double: { type: "number" },
+  integer: { type: "integer", format: "int32" },
+  int: { type: "integer", format: "int32" },
+  byte: { type: "integer", format: "int32" },
+  short: { type: "integer", format: "int32" },
+  long: { type: "integer", format: "int64" },
+  biginteger: { type: "integer" },
+  float: { type: "number", format: "float" },
+  double: { type: "number", format: "double" },
+  bigdecimal: { type: "number" },
   boolean: { type: "boolean" },
   bool: { type: "boolean" },
+  char: { type: "string" },
+  character: { type: "string" },
+  uuid: { type: "string", format: "uuid" },
+  uri: { type: "string", format: "uri" },
+  url: { type: "string", format: "uri" },
+  localdate: { type: "string", format: "date" },
+  localdatetime: { type: "string", format: "date-time" },
+  offsetdatetime: { type: "string", format: "date-time" },
+  zoneddatetime: { type: "string", format: "date-time" },
+  instant: { type: "string", format: "date-time" },
+  timestamp: { type: "string", format: "date-time" },
   object: { type: "object", properties: {} },
   array: { type: "array", items: { type: "string" } },
   file: { type: "string", format: "binary" },
@@ -36,8 +51,16 @@ const ARRAY_TYPE_ALIASES = new Set([
   "list",
   "arraylist",
   "linkedlist",
+  "collection",
+  "iterable",
+  "vector",
+  "queue",
+  "deque",
   "set",
   "hashset",
+  "linkedhashset",
+  "sortedset",
+  "treeset",
 ]);
 
 const OBJECT_TYPE_ALIASES = new Set([
@@ -45,6 +68,9 @@ const OBJECT_TYPE_ALIASES = new Set([
   "map",
   "hashmap",
   "linkedhashmap",
+  "sortedmap",
+  "treemap",
+  "concurrenthashmap",
   "dictionary",
   "dict",
   "record",
@@ -268,7 +294,9 @@ function schemaFromTypeCore(typeExpression) {
     return safeClone(TYPE_MAP[normalized]);
   }
 
-  return { type: "string" };
+  // apidoc has no Java class metadata. Treat an unrecognized type name as a
+  // JavaBean instead of silently degrading it to a string.
+  return { type: "object", properties: {} };
 }
 
 function schemaFromTypeExpression(typeName) {
@@ -424,6 +452,24 @@ function applyEnumToSchema(schema, enumEntries) {
           return schema.items;
         })()
       : schema;
+
+  // An unknown Java type is initially treated as a JavaBean. If apidoc also
+  // provides enum values, it is an enum class and must remain a primitive.
+  if (
+    target.type === "object" &&
+    !target.additionalProperties &&
+    Object.keys(target.properties || {}).length === 0
+  ) {
+    const values = enumEntries.map((entry) => entry.value);
+    delete target.properties;
+    if (values.every((value) => typeof value === "boolean")) {
+      target.type = "boolean";
+    } else if (values.every((value) => typeof value === "number")) {
+      target.type = values.every(Number.isInteger) ? "integer" : "number";
+    } else {
+      target.type = "string";
+    }
+  }
 
   target.enum = enumEntries.map((entry) => entry.value);
   const enumDescriptions = enumEntries.map((entry) => entry.description || "");

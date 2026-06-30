@@ -6,7 +6,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "apidoc-to-openapi": "./bin/apidoc-to-openapi.js"
+    "apidoc-to-openapi": "bin/apidoc-to-openapi.js"
   },
   "keywords": [
     "apidoc",
@@ -22,7 +22,8 @@
   ],
   "scripts": {
     "check": "node --check src/cli.js && node --check src/converter.js && node --check src/options.js",
-    "prepublishOnly": "npm run check"
+    "test": "node --test",
+    "prepublishOnly": "npm run check && npm test"
   },
   "engines": {
     "node": ">=18"

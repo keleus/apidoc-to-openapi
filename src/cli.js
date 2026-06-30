@@ -76,6 +76,15 @@ export async function runCli(argv = process.argv.slice(2)) {
   }
 
   try {
+    if (
+      options.output &&
+      options.apidocOutput &&
+      path.resolve(process.cwd(), options.output) ===
+        path.resolve(process.cwd(), options.apidocOutput)
+    ) {
+      throw new Error("--output and --apidoc-output must use different files");
+    }
+
     const apidocConfig = buildApidocConfig(options);
     const doc = createDoc(apidocConfig);
 
@@ -84,9 +93,13 @@ export async function runCli(argv = process.argv.slice(2)) {
       return 2;
     }
 
-    const openApi = apidocDataToOpenApi({
-      docData: parsePossiblyJson(doc.data),
+    const apidocDocument = {
+      data: parsePossiblyJson(doc.data),
       project: parsePossiblyJson(doc.project),
+    };
+    const openApi = apidocDataToOpenApi({
+      docData: apidocDocument.data,
+      project: apidocDocument.project,
       title: options.title,
       apiVersion: options.apiVersion,
       description: options.description,
@@ -94,13 +107,31 @@ export async function runCli(argv = process.argv.slice(2)) {
     });
 
     const content = serializeOpenApi(openApi, options.format, options.pretty);
+    const outputMessages = [];
+
+    if (options.apidocOutput) {
+      const apidocContent = JSON.stringify(
+        apidocDocument,
+        null,
+        options.pretty ? 2 : 0,
+      );
+      await writeOutput(options.apidocOutput, apidocContent);
+      outputMessages.push(
+        `apidoc JSON written to ${path.resolve(process.cwd(), options.apidocOutput)}`,
+      );
+    }
 
     if (options.output) {
       await writeOutput(options.output, content);
-      process.stdout.write(
-        `OpenAPI document written to ${path.resolve(process.cwd(), options.output)}\n`,
+      outputMessages.unshift(
+        `OpenAPI document written to ${path.resolve(process.cwd(), options.output)}`,
       );
+      process.stdout.write(`${outputMessages.join("\n")}\n`);
       return 0;
+    }
+
+    if (outputMessages.length > 0) {
+      process.stderr.write(`${outputMessages.join("\n")}\n`);
     }
 
     process.stdout.write(content);

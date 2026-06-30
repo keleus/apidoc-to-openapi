@@ -39,6 +39,7 @@ apidoc-to-openapi --src <dir> [options]
 
 - `-s, --src <dir>`: Source directory for apidoc scanning (required).
 - `-o, --output <file>`: Output file path. When omitted, writes to stdout.
+- `--apidoc-output <file>`: Write the raw parsed apidoc `{ data, project }` object as JSON. Omitted by default.
 - `-f, --format <json|yaml>`: Output format. Auto-detected from output extension when omitted.
 - `--title <text>`: Override `info.title`.
 - `--api-version <text>`: Override `info.version`.
@@ -62,6 +63,15 @@ Generate JSON to stdout:
 
 ```bash
 apidoc-to-openapi --src ./src --format json > openapi.json
+```
+
+Generate OpenAPI and raw parsed apidoc JSON together:
+
+```bash
+apidoc-to-openapi \
+  --src ./src \
+  --output ./openapi.yaml \
+  --apidoc-output ./apidoc.json
 ```
 
 Override OpenAPI info:

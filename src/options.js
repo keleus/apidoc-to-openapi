@@ -8,6 +8,7 @@ Usage:
 Options:
   -s, --src <dir>            Source directory for apidoc scanning (required)
   -o, --output <file>        Write output to a file; defaults to stdout
+      --apidoc-output <file> Write raw parsed apidoc data as JSON
   -f, --format <json|yaml>   Output format (inferred from --output when omitted)
       --title <text>         Override OpenAPI info.title
       --api-version <text>   Override OpenAPI info.version
@@ -21,6 +22,7 @@ Options:
 
 Examples:
   apidoc-to-openapi -s ./src -o ./openapi.yaml
+  apidoc-to-openapi -s ./src -o ./openapi.yaml --apidoc-output ./apidoc.json
   apidoc-to-openapi -s ./src -f json > openapi.json
   apidoc-to-openapi -s ./src --server https://api.example.com
 `;
@@ -44,6 +46,7 @@ export function parseCliArgs(args) {
   const options = {
     src: "",
     output: "",
+    apidocOutput: "",
     format: "",
     title: "",
     apiVersion: "",
@@ -72,6 +75,12 @@ export function parseCliArgs(args) {
 
     if (arg === "-o" || arg === "--output") {
       options.output = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--apidoc-output") {
+      options.apidocOutput = requireValue(args, index, arg);
       index += 1;
       continue;
     }
